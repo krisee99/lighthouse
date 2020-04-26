@@ -26,16 +26,17 @@ class NestedManyToMany implements ArgResolver
     {
         /** @var \Illuminate\Database\Eloquent\Relations\BelongsToMany|\Illuminate\Database\Eloquent\Relations\MorphToMany $relation */
         $relation = $parent->{$this->relationName}();
+        $relatedPivotKeyToSyncTo = $relation->getRelatedPivotKeyName();
 
         if ($args->has('sync')) {
             $relation->sync(
-                $this->generateRelationArray($args->arguments['sync'])
+                $this->generateRelationArray($args->arguments['sync'], $relatedPivotKeyToSyncTo)
             );
         }
 
         if ($args->has('syncWithoutDetaching')) {
             $relation->syncWithoutDetaching(
-                $this->generateRelationArray($args->arguments['syncWithoutDetaching'])
+                $this->generateRelationArray($args->arguments['syncWithoutDetaching'], $relatedPivotKeyToSyncTo)
             );
         }
 
@@ -50,7 +51,7 @@ class NestedManyToMany implements ArgResolver
 
         if ($args->has('connect')) {
             $relation->attach(
-                $this->generateRelationArray($args->arguments['connect'])
+                $this->generateRelationArray($args->arguments['connect'], $relatedPivotKeyToSyncTo)
             );
         }
 
@@ -71,7 +72,7 @@ class NestedManyToMany implements ArgResolver
      * @param  \Nuwave\Lighthouse\Execution\Arguments\Argument $args
      * @return mixed[]
      */
-    private function generateRelationArray(Argument $args): array
+    private function generateRelationArray(Argument $args, $relatedPivotKey): array
     {
         $values = $args->toPlain();
 
@@ -87,7 +88,7 @@ class NestedManyToMany implements ArgResolver
         if (is_array($exemplaryValue)) {
             $relationArray = [];
             foreach ($values as $value) {
-                $id = Arr::pull($value, 'id');
+                $id = Arr::pull($value, $relatedPivotKey);
                 $relationArray[$id] = $value;
             }
 
